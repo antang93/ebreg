@@ -1,0 +1,70 @@
+library('mixOmics')
+data("multidrug")
+
+str(multidrug)
+compound <- multidrug$compound
+head(multidrug$ABC.trans)
+
+df <- list()
+for(i in 1:11){
+  df[[i]] <- multidrug$ABC.trans[,i]
+}
+df[[12]] <- multidrug$ABC.trans[,13]
+
+compound <- compound[, apply(compound, 2, function(x) !any(is.na(x)))]
+
+seeds <- c(1:10)
+#748272, 1829273, 1, 121, 94372, 23419, 13, 12, 4, 7, 11, 140:142)
+
+res12 <- list()
+
+for(i in 1:20){
+set.seed(.Random.seed[i])
+data <- compound
+bound <- floor((nrow(data)/4)*3)
+index <- sample(nrow(data))
+data <- data[index,]
+#data <- apply(data, 2, function(y) (y-mean(y))/sd(y))
+data.train <- data[1:bound,]
+data.test <- data[(bound+1):nrow(data), ]
+y <- df[[12]][index]
+y.train <- y[1:bound]
+y.train <- scale(y.train)
+y.test <- y[(bound+1):length(df[[12]])]
+y.test <- scale(y.test)
+
+dcomplex <- function(x, n, p, a, b) -x * (log(b) + a * log(p)) + log(x <= n)
+log.f <- function(x) dcomplex(x, 45, 853, 0.05, 1)
+alpha=.99
+gam = .005
+data.train <- matrix(as.numeric(data.train),nrow=45, ncol=853)
+data.test <- matrix(as.numeric(data.test),nrow=15, ncol=853)
+y.train <- as.numeric(y.train)
+y.test <- as.numeric(y.test)
+time.eb1 <- system.time(o1 <- ebpred(y.train, data.train, data.test, alpha, gam, NULL, log.f, M=5000))[3]
+time.eb2 <- system.time(o2 <- ebpred.prior(y.train, data.train, data.test, alpha, gam, c(0.01, 4), log.f, M=5000))[3]
+mspe.eb1 <- mean((colMeans(o1$Yhat)-y.test)**2)
+mspe.eb2 <- mean((colMeans(o2$Yhat)-y.test)**2)
+mspe.lasso <- mean((data.test %*% o1$b.lasso - y.test)**2)
+time.lasso <- system.time(lassopred(data.train, y.train, data.test))[3] #time for lasso
+time.alasso <- system.time(alasso.calc <- alasso.pred(data.train, y.train, data.test))[3]
+mspe.alasso <- mean((alasso.calc-y.test)**2)
+sink('/dev/null')
+time.hs1 <- system.time(hs1 <- HSpred(data.train, y.train, data.test, o1$sig2))[3]
+mspe.hs1 <- mean((hs1$pred-y.test)**2)
+time.hs2 <- system.time(hs2 <- HSpred(data.train, y.train, data.test, NULL))[3]
+mspe.hs2 <- mean((hs2$pred-y.test)**2)
+sink()
+suppressMessages(time.dlasso <- system.time(dlasso <- dlasso.pred(data.train, y.train, data.test))[3]) #time for desparsified lasso
+mspe.dlasso <- mean((dlasso$pred-y.test)**2) #mspe for desparsified lasso
+suppressMessages(time.dlasso.new <- system.time(dlasso.new <- dlasso.improved.pred(data.train, y.train, data.test))[3]) #time for improved desparsified lasso
+mspe.dlasso.new <- mean((dlasso.new$pred-y.test)**2) #mspe for improved desparsified lasso
+res12[[i]] <- c(seed=.Random.seed[i], mspe.eb1=mspe.eb1, mspe.eb2=mspe.eb2, mspe.hs1=mspe.hs1, mspe.hs2=mspe.hs2, mspe.lasso=mspe.lasso, 
+             mspe.alasso=mspe.alasso, time.eb1=time.eb1, time.eb2=time.eb2, time.hs1=time.hs1, time.hs2=time.hs2, time.lasso=time.lasso,
+             time.alasso=time.alasso)
+#print(c(i, MSPE, mspe.lasso, mspe.alasso, mspe.hs, mspe.rr, mspe.pcr, time.eb, time.hs))
+}
+
+res12 <- do.call(rbind, res12)
+write.csv(res, 'Dropbox/RM/0 results/realdata_finalresults.csv')
+res <- rbind(res1, res2, res3, res4, res5, res6, res7, res8, res9, res10, res11, res12)
