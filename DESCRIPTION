@@ -4,7 +4,7 @@ Title: Implementation of the Empirical Bayes Method
 Version: 0.1.0
 Author: Yiqi Tang, Ryan Martin
 Maintainer: Yiqi Tang <ytang22@ncsu.edu>
-Description: Implements a Bayesian-like approach to the high-dimensional sparse linear regression problem based on an empirical or data-dependent prior distribution, which can be used for estimation/inference on the model parameters, variable selection, and prediction of a future response.
+Description: Implements a Bayesian-like approach to the high-dimensional sparse linear regression problem based on an empirical or data-dependent prior distribution, which can be used for estimation/inference on the model parameters, variable selection, and prediction of a future response. Martin, Ryan and Mess, Raymond and Walker, Stephen G (2017) <doi:10.3150/15-BEJ797>. Martin, Ryan and Tang, Yiqi (2019) <arXiv:1903.00961>
 License: GPL-3
 Encoding: UTF-8
 LazyData: true

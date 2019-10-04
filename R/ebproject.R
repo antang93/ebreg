@@ -67,7 +67,6 @@
 #' o<-ebreg(y, X, X.new, .99, .005, NULL, FALSE, igpar=c(0.01, 4), log.f, M=5000, TRUE, FALSE, .95)
 #'
 #' incl.pr <- o$incl.prob
-#' par(mfrow=c(1,1))
 #' plot(incl.pr, xlab="Variable Index", ylab="Inclusion Probability", type="h", ylim=c(0,1))
 #'
 #'
